@@ -6,8 +6,6 @@ const { exec } = require('child_process');
 dotenv.config();
 
 const app = express();
-const port = 8099;
-const secretKey = 'uIiwiaWF0IjoxNzA2MjIyNzMwLCJleHAiOjE3MDYy'; // Bu, token'ları oluştururken ve doğrularken kullanacağınız gizli anahtardır.
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
@@ -20,7 +18,7 @@ app.post('/login', (req, res) => {
     // Kullanıcı adı ve şifreyi kontrol et
     if (username === process.env.DASHBOARD_ADMIN && password === process.env.DASHBOARD_PASSWORD) {
         // Başarılı ise token oluştur ve gönder
-        const token = jwt.sign({ username }, secretKey);
+        const token = jwt.sign({ username }, process.env.JWT_SCREET);
         res.json({ token });
     } else {
         // Başarısız ise hata gönder
@@ -32,7 +30,7 @@ app.post('/login', (req, res) => {
 function authenticateToken(req, res, next) {
     const token = req.headers.authorization.split('Bearer ')[1]
     if (!token) return res.sendStatus(401);
-    jwt.verify(token, secretKey, (err, user) => {
+    jwt.verify(token, process.env.JWT_SCREET, (err, user) => {
         if (err) {
             console.error('JWT verification error:', err);
             return res.sendStatus(403);
@@ -81,6 +79,6 @@ function runCommand(command) {
     });
 }
 
-app.listen(port, () => {
-    console.log(`Sunucu http://localhost:${port} adresinde çalışıyor`);
+app.listen(process.env.APP_PORT, () => {
+    console.log(`Sunucu ${process.env.APP_URL}:${process.env.APP_PORT} adresinde çalışıyor`);
 });
