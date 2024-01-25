@@ -1,7 +1,9 @@
 const express = require('express');
+const dotenv = require('dotenv');;
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const { exec } = require('child_process');
+dotenv.config();
 
 const app = express();
 const port = 8099;
@@ -14,9 +16,9 @@ app.use(bodyParser.json());
 app.post('/login', (req, res) => {
     // Kullanıcı adı ve şifreyi al
     const { username, password } = req.body;
-
+    console.log(process.env.DASHBOARD_ADMIN)
     // Kullanıcı adı ve şifreyi kontrol et
-    if (username === 'InityDeploy' && password === 'InityDeploy') {
+    if (username === process.env.DASHBOARD_ADMIN && password === process.env.DASHBOARD_PASSWORD) {
         // Başarılı ise token oluştur ve gönder
         const token = jwt.sign({ username }, secretKey);
         res.json({ token });
