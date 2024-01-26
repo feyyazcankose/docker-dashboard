@@ -26,17 +26,38 @@
             width: 20px;
             height: 30px;
         }
+
+
+        .terminal-log {
+            width: 100%;
+            height: 50vh;
+            background: black;
+            color: white;
+            padding: 10px;
+            font-family: 'Open Sans', sans-serif;
+            border-radius: 15px;
+            overflow: hidden;
+            position: fixed;
+            bottom: 0;
+        }
+
+        .scroll {
+            overflow-y: scroll;
+            padding-right: 26px;
+            box-sizing: content-box;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 
 <body class="min-h-screen flex items-center justify-center">
-
-    <div class="flex flex-col">
+    <div class="flex flex-col ">
         <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="logo-container flex align-center justify-center mt-6">
                 <img src="https://www.inity.com.tr/assets/images/web/logo4.png" alt="Logo" class="w-24 mt-3">
             </div>
-            <div class="main w-full flex align-center justify-center place-items-center gap-2 h-screen">
+            <div class="main w-full flex-wrap flex align-center justify-center place-items-center gap-2 h-screen">
                 <div class="card bg-white flex flex-col items-center justify-center p-4 shadow-lg rounded-2xl w-64">
                     <div class="profile mx-auto rounded-full py-2 w-16">
                         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 256 256">
@@ -61,6 +82,9 @@
                     <div class="w-full mt-8">
                         <button type="button" onclick="executeDockerCommands('rigorent-backend','rigorent_backend')"
                             class="bg-blue-500 py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Update</button>
+                        <button type="button" onclick="showLogs('rigorent_backend')"
+                            class="bg-green-500 mt-1  py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Show
+                            Logs</button>
                     </div>
                 </div>
 
@@ -96,7 +120,10 @@
                     </div>
                     <div class="w-full mt-8">
                         <button type="button" onclick="executeDockerCommands('rigorent-frontend','rigorent_web')"
-                            class="bg-blue-500 py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Update</button>
+                            class="bg-blue-500  py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Update</button>
+                        <button type="button" onclick="showLogs('rigorent_web')"
+                            class="bg-green-500 mt-1 py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Show
+                            Logs</button>
                     </div>
                 </div>
 
@@ -133,6 +160,9 @@
                     <div class="w-full mt-8">
                         <button type="button" onclick="executeDockerCommands('rigorent-admin','rigorent_admin')"
                             class="bg-blue-500 py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Update</button>
+                        <button type="button" onclick="showLogs('rigorent_admin')"
+                            class="bg-green-500 mt-1  py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Show
+                            Logs</button>
                     </div>
                 </div>
             </div>
@@ -145,7 +175,25 @@
                 d="M116 216a12 12 0 0 1-12 12H48a20 20 0 0 1-20-20V48a20 20 0 0 1 20-20h56a12 12 0 0 1 0 24H52v152h52a12 12 0 0 1 12 12m108.49-96.49l-40-40a12 12 0 0 0-17 17L187 116h-83a12 12 0 0 0 0 24h83l-19.52 19.51a12 12 0 0 0 17 17l40-40a12 12 0 0 0 .01-17" />
         </svg>
     </div>
+
+    <div class="terminal-log hidden" id="logs">
+        <div class="terminal-header flex justify-between">
+            <h1 class="text-white font-bold px-4 py-2"></h1>
+            <h1 class="text-white font-bold px-4 py-2">
+                <svg onclick="terminalClose()" class="text-red-500 cursor-pointer" xmlns="http://www.w3.org/2000/svg"
+                    width="1em" height="1em" viewBox="0 0 20 20">
+                    <path fill="currentColor" d="m4.3 2.9l12.8 12.8l-1.4 1.4L2.9 4.3z" />
+                    <path fill="currentColor" d="M17.1 4.3L4.3 17.1l-1.4-1.4L15.7 2.9z" />
+                </svg>
+            </h1>
+        </div>
+        <div class="scroll" id="log-content">
+        </div>
+    </div>
+
+    <div id="drawerOverlay" class="fixed inset-0 hidden"></div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.7/dist/sweetalert2.all.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
@@ -195,12 +243,41 @@
                 },
             });
         }
+
         function logout() {
             localStorage.removeItem('token');
             window.location.href = '/';
         }
-    </script>
 
+        let showLogInterval = null
+
+        async function showLogApi(repositoryName) {
+
+            try {
+                const response = await fetch(`/api/get-docker-logs/${repositoryName}`);
+                const data = await response.json();
+                document.getElementById("logs").classList.remove("hidden");
+                document.getElementById("log-content").innerHTML = `<pre>${data.logs}</pre>`;
+            } catch (error) {
+                console.error(`Hata: ${error.message}`);
+                alert(`Hata: ${error.message}`);
+            }
+        }
+
+        async function showLogs(repositoryName) {
+            await showLogApi(repositoryName);
+            showLogInterval = window.setInterval(() => {
+                return new Promise(async (resolve, reject) => {
+                    resolve(await showLogApi(repositoryName));
+                });
+            }, 6000);
+        }
+
+        function terminalClose() {
+            clearInterval(showLogInterval);
+            document.getElementById("logs").classList.add("hidden");
+        }
+    </script>
 </body>
 
 </html>

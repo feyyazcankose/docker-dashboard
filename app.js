@@ -26,6 +26,7 @@ app.post('/login', (req, res) => {
     }
 });
 
+
 // Diğer endpoint'ler için JWT doğrulama middleware'i
 function authenticateToken(req, res, next) {
     const token = req.headers.authorization.split('Bearer ')[1]
@@ -54,13 +55,46 @@ app.post('/execute-docker-commands', authenticateToken, (req, res) => {
     const pullCommand = `docker pull registry.digitalocean.com/turassist/${project.registry_name}_prod:latest`;
     const scaleDownCommand = `docker service scale ${project.service_name}=0`;
     const scaleUpCommand = `docker service scale ${project.service_name}=1`;
-
+    const clearCommandImages = `docker image prune`;
     // Komutları sırayla çalıştır
     runCommand(pullCommand)
         .then(() => runCommand(scaleDownCommand))
         .then(() => runCommand(scaleUpCommand))
+        .then(() => runCommand(clearCommandImages))
         .then(() => res.send('Transactions completed successfully'))
         .catch(error => res.status(500).send(`Error: ${error}`));
+});
+
+app.get('/api/get-docker-logs/:repository/', async (req, res) => {
+    try {
+        const repository = req.params.repository;
+        const tag = "latest";
+
+        // Docker Image ID'sini bulma
+        const getImageIdCmd = `docker image inspect registry.digitalocean.com/turassist/${repository}_prod:${tag} --format='{{.Id}}'`;
+        const imageId = await executeShellCommand(getImageIdCmd);
+
+
+        // Docker Container ID ve adını bulma
+        const getContainerIdCmd = `docker ps --filter ancestor=${imageId.split("sha256:")[1]} --format "{{.ID}} {{.Names}}"`;
+        const containerInfo = await executeShellCommand(getContainerIdCmd);
+
+        // Logları alma
+        if (containerInfo) {
+            const [containerId, containerName] = containerInfo.split(' ');
+
+            const getLogsCmd = `docker logs ${containerId}`;
+            const logs = await executeShellCommand(getLogsCmd);
+
+            console.log(logs);
+
+            res.json({ logs, containerId, containerName });
+        } else {
+            res.status(404).json({ error: 'Belirtilen repository ve tag ile eşleşen bir container bulunamadı.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: `Hata: ${error.message}` });
+    }
 });
 
 function runCommand(command) {
@@ -78,6 +112,20 @@ function runCommand(command) {
         });
     });
 }
+
+// Shell komutlarını çalıştırmak için yardımcı fonksiyon
+function executeShellCommand(cmd) {
+    return new Promise((resolve, reject) => {
+        exec(cmd, (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(stdout.trim());
+            }
+        });
+    });
+}
+
 
 app.listen(process.env.APP_PORT, () => {
     console.log(`App ${process.env.APP_URL}:${process.env.APP_PORT} Works at`);
