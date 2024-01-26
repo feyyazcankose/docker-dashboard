@@ -30,7 +30,7 @@
 
         .terminal-log {
             width: 100%;
-            height: 50vh;
+            height: 75vh;
             background: black;
             color: white;
             padding: 10px;
@@ -57,7 +57,7 @@
             <div class="logo-container flex align-center justify-center mt-6">
                 <img src="https://www.inity.com.tr/assets/images/web/logo4.png" alt="Logo" class="w-24 mt-3">
             </div>
-            <div class="main w-full flex-wrap flex align-center justify-center place-items-center gap-2 h-screen">
+            <div class="main w-full flex-wrap flex align-center justify-center place-items-center mt-5 gap-2 h-screen">
                 <div class="card bg-white flex flex-col items-center justify-center p-4 shadow-lg rounded-2xl w-64">
                     <div class="profile mx-auto rounded-full py-2 w-16">
                         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 256 256">
@@ -82,7 +82,7 @@
                     <div class="w-full mt-8">
                         <button type="button" onclick="executeDockerCommands('rigorent-backend','rigorent_backend')"
                             class="bg-blue-500 py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Update</button>
-                        <button type="button" onclick="showLogs('rigorent_backend')"
+                        <button type="button" onclick="showLogs('rigorent-backend')"
                             class="bg-green-500 mt-1  py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Show
                             Logs</button>
                     </div>
@@ -121,7 +121,7 @@
                     <div class="w-full mt-8">
                         <button type="button" onclick="executeDockerCommands('rigorent-frontend','rigorent_web')"
                             class="bg-blue-500  py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Update</button>
-                        <button type="button" onclick="showLogs('rigorent_web')"
+                        <button type="button" onclick="showLogs('rigorent-frontend')"
                             class="bg-green-500 mt-1 py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Show
                             Logs</button>
                     </div>
@@ -160,7 +160,7 @@
                     <div class="w-full mt-8">
                         <button type="button" onclick="executeDockerCommands('rigorent-admin','rigorent_admin')"
                             class="bg-blue-500 py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Update</button>
-                        <button type="button" onclick="showLogs('rigorent_admin')"
+                        <button type="button" onclick="showLogs('rigorent-admin')"
                             class="bg-green-500 mt-1  py-2 px-4 hover:bg-blue-600 text-white w-full font-semibold rounded-lg shadow-lg">Show
                             Logs</button>
                     </div>
@@ -258,6 +258,8 @@
                 const data = await response.json();
                 document.getElementById("logs").classList.remove("hidden");
                 document.getElementById("log-content").innerHTML = `<pre>${data.logs}</pre>`;
+                var logContent = document.getElementById('log-content');
+                logContent.scrollTop = logContent.scrollHeight;
             } catch (error) {
                 console.error(`Hata: ${error.message}`);
                 alert(`Hata: ${error.message}`);
@@ -266,6 +268,10 @@
 
         async function showLogs(repositoryName) {
             await showLogApi(repositoryName);
+
+            var logContent = document.getElementById('log-content');
+            logContent.scrollTop = logContent.scrollHeight;
+
             showLogInterval = window.setInterval(() => {
                 return new Promise(async (resolve, reject) => {
                     resolve(await showLogApi(repositoryName));
