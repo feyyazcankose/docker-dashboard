@@ -59,17 +59,17 @@ app.post('/execute-docker-commands', authenticateToken, (req, res) => {
     runCommand(pullCommand)
         .then(() => runCommand(scaleDownCommand))
         .then(() => runCommand(scaleUpCommand))
-        .then(() => res.send('İşlemler başarıyla tamamlandı'))
-        .catch(error => res.status(500).send(`Hata oluştu: ${error}`));
+        .then(() => res.send('Transactions completed successfully'))
+        .catch(error => res.status(500).send(`Error: ${error}`));
 });
 
 function runCommand(command) {
     return new Promise((resolve, reject) => {
-        console.log(`Komut Çalıştırılıyor: ${command}`);
+        console.log(`Running Command: ${command}`);
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                console.error(`Hata oluştu: ${error.message}`);
+                console.error(`Error: ${error.message}`);
                 reject(error.message);
             } else {
                 console.log(`Çıktı: ${stdout}`);
@@ -80,5 +80,5 @@ function runCommand(command) {
 }
 
 app.listen(process.env.APP_PORT, () => {
-    console.log(`Sunucu ${process.env.APP_URL}:${process.env.APP_PORT} adresinde çalışıyor`);
+    console.log(`App ${process.env.APP_URL}:${process.env.APP_PORT} Works at`);
 });

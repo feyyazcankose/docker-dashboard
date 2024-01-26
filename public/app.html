@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deploy İşlemleri</title>
+    <title>Deployment</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.7/dist/sweetalert2.min.css">
     <style>
@@ -151,14 +151,14 @@
             const token = localStorage.getItem('token');
 
             if (!token) {
-                window.location.href = '/login.html';
+                window.location.href = '/';
             }
         });
 
         function executeDockerCommands(projectName, serviceName) {
             Swal.fire({
-                title: 'İşlem Sürüyor',
-                text: 'Lütfen bekleyin...',
+                title: 'Process in progress',
+                text: 'Please wait...',
                 icon: 'info',
                 showConfirmButton: false,
                 allowOutsideClick: false,
@@ -180,14 +180,14 @@
                         const data = await response.text();
 
                         Swal.fire({
-                            title: 'İşleminiz Başarılı',
+                            title: 'Your transaction is successful',
                             text: data,
                             icon: 'success',
                         });
 
                     } catch (error) {
                         Swal.fire({
-                            title: 'Hata!',
+                            title: 'Error',
                             text: error.message,
                             icon: 'error',
                         });
